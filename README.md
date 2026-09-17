@@ -68,7 +68,15 @@ Formül sütunlarına makro dokunmaz; hesaplar her zaman sayfada görünür kal�
 2. Çalışma kitabını açın, **Alt+F11** ile VBA düzenleyicisini açın.
 3. **File > Import File…** ile `markout.bas` dosyasını seçin.
 4. Düzenleyiciyi kapatın. Dosyayı **Farklı Kaydet > Excel Makro İçerebilen Çalışma Kitabı (\*.xlsm)** olarak kaydedin.
-5. **Alt+F8** ile `KisayollariAta` makrosunu bir kez çalıştırın. (Excel her açıldığında kısayollar için tekrar çalıştırılır ya da makrolar Alt+F8 listesinden doğrudan seçilir.)
+5. Kısayolların dosya her açıldığında hazır olması için: VBA düzenleyicisinde sol paneldeki **ThisWorkbook**'a çift tıklayın ve şu üç satırı yapıştırın:
+
+   ```vb
+   Private Sub Workbook_Open()
+       KisayollariSessizAta
+   End Sub
+   ```
+
+   Dosyayı kaydedip kapatın ve yeniden açın. (Bu adım atlanırsa kısayollar için her açılışta **Alt+F8** > `KisayollariAta` çalıştırılır; makrolar Alt+F8 listesinden doğrudan da seçilebilir.)
 
 ## Deneme
 

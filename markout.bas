@@ -10,7 +10,8 @@ Attribute VB_Name = "Markout"
 '                                  günlük giriþleri temizler, tarihi ilerletir.
 '
 ' Kurulum: Alt+F11 > File > Import File > markout.bas
-'          Sonra KisayollariAta makrosunu bir kez çalýþtýrýn.
+'          Kýsayollarýn her açýlýþta hazýr olmasý için ThisWorkbook'a
+'          Workbook_Open eklenir (README > Kurulum, 5. adým).
 '===============================================================================
 Option Explicit
 
@@ -57,13 +58,22 @@ Private Const AYAR_ILK_VERI As String = "B10"
 ' çalýþtýrýlýr. (Excel'de "+" Shift, "^" Ctrl demektir.)
 '===============================================================================
 Public Sub KisayollariAta()
-    Application.OnKey "^+s", "SatislariAl"
-    Application.OnKey "^+p", "GunSonuPDF"
-    Application.OnKey "^+k", "GunuKapat"
+    KisayollariSessizAta
     MsgBox "Kýsayollar atandý:" & vbCrLf & _
            "Ctrl+Shift+S  Satýþlarý al" & vbCrLf & _
            "Ctrl+Shift+P  Gün sonu PDF" & vbCrLf & _
            "Ctrl+Shift+K  Günü kapat", vbInformation
+End Sub
+
+
+'===============================================================================
+' Kýsayollarý mesaj göstermeden atar. ThisWorkbook içindeki Workbook_Open
+' bunu çaðýrýrsa kýsayollar dosya her açýldýðýnda kendiliðinden hazýr olur.
+'===============================================================================
+Public Sub KisayollariSessizAta()
+    Application.OnKey "^+s", "SatislariAl"
+    Application.OnKey "^+p", "GunSonuPDF"
+    Application.OnKey "^+k", "GunuKapat"
 End Sub
 
 
