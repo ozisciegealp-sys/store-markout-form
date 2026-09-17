@@ -1,5 +1,7 @@
 # Mağaza Gün Sonu (Mark-Out) ve Çözündürme Formu
 
+*Excel + VBA form for end-of-day stock count, sales reconciliation, thaw scheduling and next-day carryover in a coffee store. Documentation in Turkish; all data is synthetic.*
+
 Bir kahve mağazasında donuk ve günlük yiyeceklerin gün sonu sayımını, satışla karşılaştırmasını ve ertesi güne devrini yöneten Excel + VBA çalışma kitabı.
 
 > **Not:** Bu depo, bir kahve zincirinde bölge raporlama sisteminin mağaza ayağı olarak kurduğum ve kullandığım formun **sahte veriyle yeniden kurulmuş sürümüdür**. Orijinal dosyanın yapısı (sütunlar, hesaplar, SKT sayfası, yazdırılabilir form) korunmuştur. Ürünler, SKU'lar ve satış rakamları uydurmadır.
