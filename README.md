@@ -29,7 +29,7 @@ Satış adetleri rapordan ürün ürün bakılarak forma elle yazılıyor, kapan
 | `markout.bas` | VBA modülü. Excel'e içe aktarılır |
 | `ornek-satis-raporu.xlsx` | Makroyu denemek için sahte günlük satış raporu |
 
-`markout.bas`, Türkçe Windows'un karakter kodlamasıyla (Windows-1254) kaydedilmiştir; VBA düzenleyicisine içe aktarıldığında Türkçe karakterler doğru görünür.
+`markout.bas` içinde Türkçe karakter kullanılmamıştır. VBA düzenleyicisi `.bas` dosyalarını sistemin ANSI kodlamasıyla okuduğu için, bu sayede dosya hem GitHub'da hem de içe aktarıldıktan sonra VBA'da doğru görünür.
 
 ## Sayfalar
 

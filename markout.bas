@@ -1,52 +1,52 @@
 Attribute VB_Name = "Markout"
 '===============================================================================
-' MAÐAZA GÜN SONU (MARK-OUT) FORMU - MAKROLAR
+' MAGAZA GUN SONU (MARK-OUT) FORMU - MAKROLAR
 '
-' Bu modül üç iþi yapar:
-'   SatislariAl   (Ctrl+Shift+S) : Satýþ raporu dosyasýný seçtirir, SKU'ya göre
-'                                  satýþ adetlerini Markout sayfasýna yazar.
-'   GunSonuPDF    (Ctrl+Shift+P) : Markout sayfasýný tarihli PDF olarak kaydeder.
-'   GunuKapat     (Ctrl+Shift+K) : Günü arþivler, kapanýþlarý yarýnýn stoðu yapar,
-'                                  günlük giriþleri temizler, tarihi ilerletir.
+' Bu modul uc isi yapar:
+'   SatislariAl   (Ctrl+Shift+S) : Satis raporu dosyasini sectirir, SKU'ya gore
+'                                  satis adetlerini Markout sayfasina yazar.
+'   GunSonuPDF    (Ctrl+Shift+P) : Markout sayfasini tarihli PDF olarak kaydeder.
+'   GunuKapat     (Ctrl+Shift+K) : Gunu arsivler, kapanislari yarinin stogu yapar,
+'                                  gunluk girisleri temizler, tarihi ilerletir.
 '
 ' Kurulum: Alt+F11 > File > Import File > markout.bas
-'          Kýsayollarýn her açýlýþta hazýr olmasý için ThisWorkbook'a
-'          Workbook_Open eklenir (README > Kurulum, 5. adým).
+'          Kisayollarin her acilista hazir olmasi icin ThisWorkbook'a
+'          Workbook_Open eklenir (README > Kurulum, 5. adim).
 '===============================================================================
 Option Explicit
 
 '------------------------------ YAPILANDIRMA ----------------------------------
-' Sayfa adlarý
+' Sayfa adlari
 Private Const SAYFA_FORM As String = "Markout"
 Private Const SAYFA_AYAR As String = "Ayarlar"
 Private Const SAYFA_ARSIV As String = "Arsiv"
 
-' Markout sayfasýnda ürün satýrlarýnýn baþladýðý satýr
+' Markout sayfasinda urun satirlarinin basladigi satir
 Private Const ILK_SATIR As Long = 4
 
-' Tarih hücresi
+' Tarih hucresi
 Private Const HUCRE_TARIH As String = "F1"
 
-' Markout sütun numaralarý (A=1, B=2, ...)
+' Markout sutun numaralari (A=1, B=2, ...)
 Private Const S_SKU As Long = 2            ' B  SKU
-Private Const S_URUN As Long = 3           ' C  Ürün adý
+Private Const S_URUN As Long = 3           ' C  Urun adi
 Private Const S_DEV_DONUK As Long = 6      ' F  Devreden donuk
 Private Const S_GELEN As Long = 7          ' G  Gelen
-Private Const S_COZDURULEN As Long = 8     ' H  Çözündürülen (bugün donuktan alýnan)
-Private Const S_DONUK_BEK As Long = 9      ' I  Donuk beklenen kapanýþ (formül)
-Private Const S_DONUK_SAY As Long = 10     ' J  Donuk sayýlan kapanýþ
-Private Const S_DONUK_FARK As Long = 11    ' K  Donuk fark (formül)
+Private Const S_COZDURULEN As Long = 8     ' H  Cozundurulen (bugun donuktan alinan)
+Private Const S_DONUK_BEK As Long = 9      ' I  Donuk beklenen kapanis (formul)
+Private Const S_DONUK_SAY As Long = 10     ' J  Donuk sayilan kapanis
+Private Const S_DONUK_FARK As Long = 11    ' K  Donuk fark (formul)
 Private Const S_DEV_YIYECEK As Long = 13   ' M  Devreden yiyecek
-Private Const S_COZULEN As Long = 14       ' N  Dondan çözülen (dün çözündürülen)
-Private Const S_SATIS As Long = 15         ' O  Satýþ
-Private Const S_TADIM As Long = 16         ' P  Tadým
-Private Const S_ATIK As Long = 17          ' Q  Atýk
-Private Const S_GUN_BEK As Long = 18       ' R  Günlük beklenen kapanýþ (formül)
-Private Const S_GUN_SAY As Long = 19       ' S  Günlük sayýlan kapanýþ
-Private Const S_GUN_FARK As Long = 20      ' T  Günlük fark (formül)
-Private Const S_BITIS As Long = 21         ' U  Ürün bitiþ saati
+Private Const S_COZULEN As Long = 14       ' N  Dondan cozulen (dun cozundurulen)
+Private Const S_SATIS As Long = 15         ' O  Satis
+Private Const S_TADIM As Long = 16         ' P  Tadim
+Private Const S_ATIK As Long = 17          ' Q  Atik
+Private Const S_GUN_BEK As Long = 18       ' R  Gunluk beklenen kapanis (formul)
+Private Const S_GUN_SAY As Long = 19       ' S  Gunluk sayilan kapanis
+Private Const S_GUN_FARK As Long = 20      ' T  Gunluk fark (formul)
+Private Const S_BITIS As Long = 21         ' U  Urun bitis saati
 
-' Ayarlar sayfasýnda satýþ raporu biçimini tutan hücreler
+' Ayarlar sayfasinda satis raporu bicimini tutan hucreler
 Private Const AYAR_SKU_SUTUN As String = "B8"
 Private Const AYAR_ADET_SUTUN As String = "B9"
 Private Const AYAR_ILK_VERI As String = "B10"
@@ -54,21 +54,21 @@ Private Const AYAR_ILK_VERI As String = "B10"
 
 
 '===============================================================================
-' Kýsayollarý atar. Dosya ilk kez .xlsm olarak kaydedildikten sonra bir kez
-' çalýþtýrýlýr. (Excel'de "+" Shift, "^" Ctrl demektir.)
+' Kisayollari atar. Dosya ilk kez .xlsm olarak kaydedildikten sonra bir kez
+' calistirilir. (Excel'de "+" Shift, "^" Ctrl demektir.)
 '===============================================================================
 Public Sub KisayollariAta()
     KisayollariSessizAta
-    MsgBox "Kýsayollar atandý:" & vbCrLf & _
-           "Ctrl+Shift+S  Satýþlarý al" & vbCrLf & _
-           "Ctrl+Shift+P  Gün sonu PDF" & vbCrLf & _
-           "Ctrl+Shift+K  Günü kapat", vbInformation
+    MsgBox "Kisayollar atandi:" & vbCrLf & _
+           "Ctrl+Shift+S  Satislari al" & vbCrLf & _
+           "Ctrl+Shift+P  Gun sonu PDF" & vbCrLf & _
+           "Ctrl+Shift+K  Gunu kapat", vbInformation
 End Sub
 
 
 '===============================================================================
-' Kýsayollarý mesaj göstermeden atar. ThisWorkbook içindeki Workbook_Open
-' bunu çaðýrýrsa kýsayollar dosya her açýldýðýnda kendiliðinden hazýr olur.
+' Kisayollari mesaj gostermeden atar. ThisWorkbook icindeki Workbook_Open
+' bunu cagirirsa kisayollar dosya her acildiginda kendiliginden hazir olur.
 '===============================================================================
 Public Sub KisayollariSessizAta()
     Application.OnKey "^+s", "SatislariAl"
@@ -78,13 +78,13 @@ End Sub
 
 
 '===============================================================================
-' SATIÞLARI AL
-' 1. Kullanýcýya satýþ raporu dosyasýný seçtirir.
-' 2. Dosyayý salt okunur açar, SKU ve adet sütunlarýný okur.
-'    Ayný SKU raporda birden fazla satýrdaysa adetler toplanýr.
-' 3. Markout'taki her ürün satýrýna kendi satýþ adedini yazar
-'    (raporda olmayan ürüne 0).
-' 4. Raporda olup formda olmayan SKU'larý sonunda listeler.
+' SATISLARI AL
+' 1. Kullaniciya satis raporu dosyasini sectirir.
+' 2. Dosyayi salt okunur acar, SKU ve adet sutunlarini okur.
+'    Ayni SKU raporda birden fazla satirdaysa adetler toplanir.
+' 3. Markout'taki her urun satirina kendi satis adedini yazar
+'    (raporda olmayan urune 0).
+' 4. Raporda olup formda olmayan SKU'lari sonunda listeler.
 '===============================================================================
 Public Sub SatislariAl()
     Dim form As Worksheet, ayar As Worksheet
@@ -103,16 +103,16 @@ Public Sub SatislariAl()
     adetSutun = ayar.Range(AYAR_ADET_SUTUN).Value
     ilkVeri = ayar.Range(AYAR_ILK_VERI).Value
 
-    ' 1. Dosya seçimi (vazgeçilirse False döner)
+    ' 1. Dosya secimi (vazgecilirse False doner)
     dosyaYolu = Application.GetOpenFilename( _
-        FileFilter:="Satýþ raporu (*.xlsx;*.xls;*.csv),*.xlsx;*.xls;*.csv", _
-        Title:="Günlük satýþ raporunu seçin")
+        FileFilter:="Satis raporu (*.xlsx;*.xls;*.csv),*.xlsx;*.xls;*.csv", _
+        Title:="Gunluk satis raporunu secin")
     If VarType(dosyaYolu) = vbBoolean Then Exit Sub
 
     On Error GoTo Hata
     Application.ScreenUpdating = False
 
-    ' 2. Raporu oku -> sözlük: SKU => toplam adet
+    ' 2. Raporu oku -> sozluk: SKU => toplam adet
     Set satislar = CreateObject("Scripting.Dictionary")
     Set rapor = Workbooks.Open(Filename:=dosyaYolu, ReadOnly:=True)
     Set raporSayfa = rapor.Worksheets(1)
@@ -144,7 +144,7 @@ Public Sub SatislariAl()
         End If
     Next r
 
-    ' 4. Formda karþýlýðý olmayan SKU'lar
+    ' 4. Formda karsiligi olmayan SKU'lar
     For Each anahtar In satislar.Keys
         If Not eslesen.Exists(anahtar) Then
             bulunamayan = bulunamayan & vbCrLf & "  " & anahtar & "  (" & satislar(anahtar) & " adet)"
@@ -154,33 +154,33 @@ Public Sub SatislariAl()
     Application.ScreenUpdating = True
 
     If bulunamayan = "" Then
-        MsgBox yazilan & " ürünün satýþý yazýldý.", vbInformation
+        MsgBox yazilan & " urunun satisi yazildi.", vbInformation
     Else
-        MsgBox yazilan & " ürünün satýþý yazýldý." & vbCrLf & vbCrLf & _
+        MsgBox yazilan & " urunun satisi yazildi." & vbCrLf & vbCrLf & _
                "Raporda olup formda olmayan SKU'lar:" & bulunamayan & vbCrLf & vbCrLf & _
-               "Bu ürünler forma eklenmeli ya da SKU'larý kontrol edilmeli.", vbExclamation
+               "Bu urunler forma eklenmeli ya da SKU'lari kontrol edilmeli.", vbExclamation
     End If
     Exit Sub
 
 Hata:
     Application.ScreenUpdating = True
     If Not rapor Is Nothing Then rapor.Close SaveChanges:=False
-    MsgBox "Rapor okunamadý: " & Err.Description & vbCrLf & _
-           "Ayarlar sayfasýndaki SKU / adet sütun numaralarýný kontrol edin.", vbCritical
+    MsgBox "Rapor okunamadi: " & Err.Description & vbCrLf & _
+           "Ayarlar sayfasindaki SKU / adet sutun numaralarini kontrol edin.", vbCritical
 End Sub
 
 
 '===============================================================================
-' GÜN SONU PDF
-' Markout sayfasýný, çalýþma kitabýnýn bulunduðu klasöre
-' "Markout_<maðaza>_<yyyy-aa-gg>.pdf" adýyla kaydeder.
+' GUN SONU PDF
+' Markout sayfasini, calisma kitabinin bulundugu klasore
+' "Markout_<magaza>_<yyyy-aa-gg>.pdf" adiyla kaydeder.
 '===============================================================================
 Public Sub GunSonuPDF()
     Dim form As Worksheet
     Dim dosyaAdi As String
 
     If ThisWorkbook.Path = "" Then
-        MsgBox "Önce çalýþma kitabýný kaydedin; PDF ayný klasöre yazýlýr.", vbExclamation
+        MsgBox "Once calisma kitabini kaydedin; PDF ayni klasore yazilir.", vbExclamation
         Exit Sub
     End If
 
@@ -196,15 +196,15 @@ End Sub
 
 
 '===============================================================================
-' GÜNÜ KAPAT
-' 1. Sayýlan kapanýþý boþ satýr varsa uyarýr.
-' 2. Günün tüm ürün satýrlarýný Arsiv sayfasýna ekler (deðer olarak).
-' 3. Yarýna devir:
-'      devreden donuk   <- bugünün donuk sayýlan kapanýþý
-'      devreden yiyecek <- bugünün günlük sayýlan kapanýþý
-'      dondan çözülen   <- bugün çözündürmeye alýnan miktar
-' 4. Günlük giriþleri temizler, tarihi bir gün ilerletir.
-' Formül sütunlarýna (beklenen kapanýþ, fark) dokunmaz.
+' GUNU KAPAT
+' 1. Sayilan kapanisi bos satir varsa uyarir.
+' 2. Gunun tum urun satirlarini Arsiv sayfasina ekler (deger olarak).
+' 3. Yarina devir:
+'      devreden donuk   <- bugunun donuk sayilan kapanisi
+'      devreden yiyecek <- bugunun gunluk sayilan kapanisi
+'      dondan cozulen   <- bugun cozundurmeye alinan miktar
+' 4. Gunluk girisleri temizler, tarihi bir gun ilerletir.
+' Formul sutunlarina (beklenen kapanis, fark) dokunmaz.
 '===============================================================================
 Public Sub GunuKapat()
     Dim form As Worksheet, arsiv As Worksheet
@@ -218,7 +218,7 @@ Public Sub GunuKapat()
     sonSatir = SonUrunSatiri(form)
     tarih = form.Range(HUCRE_TARIH).Value
 
-    ' 1. Eksik sayým kontrolü
+    ' 1. Eksik sayim kontrolu
     For r = ILK_SATIR To sonSatir
         If UrunSatiriMi(form, r) Then
             If IsEmpty(form.Cells(r, S_DONUK_SAY).Value) Or IsEmpty(form.Cells(r, S_GUN_SAY).Value) Then
@@ -228,20 +228,20 @@ Public Sub GunuKapat()
     Next r
 
     If eksik > 0 Then
-        cevap = MsgBox(eksik & " üründe sayýlan kapanýþ boþ." & vbCrLf & _
-                       "Boþ kapanýþ yarýna 0 olarak devreder. Yine de kapatýlsýn mý?", _
-                       vbYesNo + vbExclamation, "Eksik sayým")
+        cevap = MsgBox(eksik & " urunde sayilan kapanis bos." & vbCrLf & _
+                       "Bos kapanis yarina 0 olarak devreder. Yine de kapatilsin mi?", _
+                       vbYesNo + vbExclamation, "Eksik sayim")
     Else
-        cevap = MsgBox(Format(tarih, "dd.mm.yyyy") & " günü kapatýlsýn mý?" & vbCrLf & _
-                       "Bu iþlem geri alýnamaz; önce PDF almanýz önerilir.", _
-                       vbYesNo + vbQuestion, "Günü kapat")
+        cevap = MsgBox(Format(tarih, "dd.mm.yyyy") & " gunu kapatilsin mi?" & vbCrLf & _
+                       "Bu islem geri alinamaz; once PDF almaniz onerilir.", _
+                       vbYesNo + vbQuestion, "Gunu kapat")
     End If
     If cevap <> vbYes Then Exit Sub
 
     Application.ScreenUpdating = False
     Application.Calculate
 
-    ' 2. Arþive yaz
+    ' 2. Arsive yaz
     hedef = arsiv.Cells(arsiv.Rows.Count, 1).End(xlUp).Row + 1
     For r = ILK_SATIR To sonSatir
         If UrunSatiriMi(form, r) Then
@@ -286,25 +286,25 @@ Public Sub GunuKapat()
     form.Range(HUCRE_TARIH).Value = tarih + 1
     Application.ScreenUpdating = True
 
-    MsgBox "Gün kapatýldý. Yeni tarih: " & Format(tarih + 1, "dd.mm.yyyy"), vbInformation
+    MsgBox "Gun kapatildi. Yeni tarih: " & Format(tarih + 1, "dd.mm.yyyy"), vbInformation
 End Sub
 
 
 '------------------------------ YARDIMCILAR -----------------------------------
 
-' Satýrda SKU varsa ürün satýrýdýr; kategori baþlýk satýrlarýnda SKU boþtur.
+' Satirda SKU varsa urun satiridir; kategori baslik satirlarinda SKU bostur.
 Private Function UrunSatiriMi(ws As Worksheet, r As Long) As Boolean
     UrunSatiriMi = (SkuTemizle(ws.Cells(r, S_SKU).Value) <> "")
 End Function
 
-' Ürün adý sütunundaki son dolu satýr.
+' Urun adi sutunundaki son dolu satir.
 Private Function SonUrunSatiri(ws As Worksheet) As Long
     SonUrunSatiri = ws.Cells(ws.Rows.Count, S_URUN).End(xlUp).Row
 End Function
 
-' SKU'yu karþýlaþtýrýlabilir metne çevirir:
-' sayý olarak gelen 100101 ile metin olarak gelen "100101 " ayný sayýlýr.
-' Bölünmez boþluk (Chr 160) ve baþ/son boþluklar atýlýr.
+' SKU'yu karsilastirilabilir metne cevirir:
+' sayi olarak gelen 100101 ile metin olarak gelen "100101 " ayni sayilir.
+' Bolunmez bosluk (Chr 160) ve bas/son bosluklar atilir.
 Private Function SkuTemizle(deger As Variant) As String
     Dim s As String
     If IsError(deger) Or IsEmpty(deger) Then Exit Function
@@ -315,13 +315,13 @@ Private Function SkuTemizle(deger As Variant) As String
     SkuTemizle = s
 End Function
 
-' Boþ veya sayý olmayan hücreyi 0 kabul eder.
+' Bos veya sayi olmayan hucreyi 0 kabul eder.
 Private Function Sayi(deger As Variant) As Double
     If IsError(deger) Then Exit Function
     If IsNumeric(deger) And Not IsEmpty(deger) Then Sayi = CDbl(deger)
 End Function
 
-' Dosya adýnda kullanýlamayan karakterleri "_" yapar.
+' Dosya adinda kullanilamayan karakterleri "_" yapar.
 Private Function DosyaAdinaUygun(s As String) As String
     Dim yasak As Variant, k As Variant
     yasak = Array("\", "/", ":", "*", "?", """", "<", ">", "|", " ")
