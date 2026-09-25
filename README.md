@@ -6,7 +6,7 @@ Bir kahve mağazasında donuk ve günlük yiyeceklerin gün sonu sayımını, sa
 
 > **Not:** Bu depo, bir kahve zincirinde bölge raporlama sisteminin mağaza ayağı olarak kurduğum ve kullandığım formun **sahte veriyle yeniden kurulmuş sürümüdür**. Orijinal dosyanın yapısı (sütunlar, hesaplar, SKT sayfası, yazdırılabilir form) korunmuştur. Ürünler, SKU'lar ve satış rakamları uydurmadır.
 >
-> Orijinal sistemde satış verisi şirketin ERP sisteminden (Oracle) otomatik indiriliyordu. O bölüm şirket bilgisayarlarında kaldığı için burada yoktur; yerine, indirilmiş satış raporunu seçip okuyan bir makro vardır.
+> Orijinal sistemde günlük satış raporu şirketin ERP sisteminden (Oracle) indirilip bu forma okutuluyordu. Bu sürümde indirilen raporun yerini `ornek-satis-raporu.xlsx` alıyor; makro raporu aynı şekilde seçip okuyor.
 
 ## Hangi problemi çözüyor
 
@@ -100,7 +100,7 @@ Yeni ürün satırı eklendiğinde `SKT` ve `Bos_Form` sayfalarına da aynı sat
 
 ## Sınırlar
 
-- ERP'den otomatik veri indirme bu sürümde yoktur; rapor elle indirilip seçilir.
+- Satış raporu ERP'den elle indirilir; makro indirmeyi yapmaz, indirilen dosyayı okur.
 - `GunuKapat` geri alınamaz. Kapatmadan önce PDF almak önerilir.
 - Makrolar Windows'ta Excel 2010 ve sonrasıyla yazılmıştır. Mac ve LibreOffice'te denenmemiştir.
 
