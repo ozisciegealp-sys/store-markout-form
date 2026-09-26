@@ -4,7 +4,7 @@
 
 Bir kahve mağazasında donuk ve günlük yiyeceklerin gün sonu sayımını, satışla karşılaştırmasını ve ertesi güne devrini yöneten Excel + VBA çalışma kitabı.
 
-> **Not:** Bu depo, bir kahve zincirinde bölge raporlama sisteminin mağaza ayağı olarak kurduğum ve kullandığım formun **sahte veriyle yeniden kurulmuş sürümüdür**. Orijinal dosyanın yapısı (sütunlar, hesaplar, SKT sayfası, yazdırılabilir form) korunmuştur. Ürünler, SKU'lar ve satış rakamları uydurmadır.
+> **Not:** Bu depo, bir kahve zincirinde standart stok formunu geliştirerek kurduğum ve bölgedeki 16 mağazayla paylaştığım gün sonu formunun **sahte veriyle yeniden kurulmuş sürümüdür**. Her mağaza formu kendi ürün yelpazesine göre uyarlayarak kullanıyordu. Orijinal dosyanın yapısı (sütunlar, hesaplar, SKT sayfası, yazdırılabilir form) korunmuştur. Ürünler, SKU'lar ve satış rakamları uydurmadır.
 >
 > Orijinal sistemde günlük satış raporu şirketin ERP sisteminden (Oracle) indirilip bu forma okutuluyordu. Bu sürümde indirilen raporun yerini `ornek-satis-raporu.xlsx` alıyor; makro raporu aynı şekilde seçip okuyor.
 
