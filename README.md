@@ -1,110 +1,78 @@
-# Mağaza Gün Sonu (Mark-Out) ve Çözündürme Formu
+# Mağaza Gün Sonu (Mark-Out), Çözündürme ve Fire Analiz Sistemi
 
 **Türkçe** | [English](README.en.md)
 
-*Excel + VBA form for end-of-day stock count, sales reconciliation, thaw scheduling and next-day carryover in a coffee store. Full English documentation in [README.en.md](README.en.md); all data is synthetic.*
+Çok şubeli perakende ve F&B mağazalarında donuk/günlük yiyeceklerin gün sonu sayımını, ERP (Oracle) satış raporuyla mutabakatını, adisyon (ADT/UPH) bazlı çözündürme planlamasını, SKT takibini ve aylık fire analizini yöneten Excel + VBA çalışma kitabı.
 
-Bir kahve mağazasında donuk ve günlük yiyeceklerin gün sonu sayımını, satışla karşılaştırmasını ve ertesi güne devrini yöneten Excel + VBA çalışma kitabı.
-
-> **Not:** Bu depo, bir kahve zincirinde standart stok formunu geliştirerek kurduğum ve bölgedeki 16 mağazayla paylaştığım gün sonu formunun **sahte veriyle yeniden kurulmuş sürümüdür**. Her mağaza formu kendi ürün yelpazesine göre uyarlayarak kullanıyordu. Orijinal dosyanın yapısı (sütunlar, hesaplar, SKT sayfası, yazdırılabilir form) korunmuştur. Ürünler, SKU'lar ve satış rakamları uydurmadır.
+> **Gizlilik ve Sentetik Veri Notu:** Bu depo, bölge operasyonundaki 16 mağazada kullanılan gün sonu raporlama ve stok kontrol sisteminin mağaza ayağını **tamamen sentetik (kurgu) veriyle** gösterir. Kurumsal gizlilik gereği marka, mağaza ve şirket verileri yer almaz; ürün adları, SKU kodları, maliyetler ve satış adetleri örnekleme amacıyla üretilmiştir.
 >
-> Orijinal sistemde günlük satış raporu şirketin ERP sisteminden (Oracle) indirilip bu forma okutuluyordu. Bu sürümde indirilen raporun yerini `ornek-satis-raporu.xlsx` alıyor; makro raporu aynı şekilde seçip okuyor.
+> Orijinal akışta günlük satış raporu ERP sisteminden (Oracle) indirilip makroyla tek tuşta bu forma okutuluyordu. Bu depoda ERP çıktısını `ornek-satis-raporu.xlsx` temsil eder.
 
 ## Hangi problemi çözüyor
 
-Her akşam kapanışta her ürün için şu soruların cevabı gerekir: Donukta ne kadar kaldı? Gün içinde ne kadar satıldı, ne kadar atıldı? Sayılan stok beklenenle tutuyor mu? Yarın rafa hangi ürün hangi son kullanma tarihiyle çıkacak?
+Her akşam kapanışta ve ertesi gün hazırlığında şu soruların hızlı ve hatasız yanıtlanması gerekir: Donukta ve vitrinde ne kadar ürün kaldı? Gün içinde ne kadar satıldı, ne kadar fire (mark-out) oluştu? Sayılan stok beklenenle tutuyor mu? Yarınki tahmini müşteri sayısına göre kaç adet ürün çözündürülmeli ve hangi SKT etiketi basılmalı?
 
-Bu formda:
+Bu sistemde:
 
-- Satış adetleri rapordan tek tuşla SKU'ya göre gelir.
-- Beklenen kapanış ve fark (kayıp) kendiliğinden hesaplanır.
-- Gün kapatıldığında bugünün kapanışı yarının stoğu olur ve form ertesi güne hazır hâle gelir. Günün kaydı arşive yazılır.
-- Çözündürmeye alınan ürünlerin son kullanma tarihleri ayrı sayfada hesaplanır.
+- Satış adetleri ERP raporundan tek kısayolla (`Ctrl+Shift+S`) SKU bazında forma çekilir.
+- Donuk ve günlük beklenen kapanış ile sayım farkları (kayıp/fire) otomatik hesaplanır.
+- Yarınki tahmini adisyona (ADT) ve ürünlerin 100 adisyon başına satış hızına (UPH) göre çözündürme önerisi ve donuk stok yeterlilik uyarısı üretilir.
+- Çözündürmeye alınan ve dünden devreden ürünlerin SKT'leri ayrı sayfada otomatik hesaplanır.
+- 30 günlük satış ve fire verisinden **Yıldız Ürünler** (yüksek satış, düşük fire) ile **Sorunlu Ürünler** (hedef üstü fire) sınıflandırılır.
+- Gün kapatıldığında (`Ctrl+Shift+K`) kapanış sayımları yarının açılış stoğuna devreder ve günün kaydı arşive işlenir.
 
 ## Öncesi
 
-Satış adetleri rapordan ürün ürün bakılarak forma elle yazılıyor, kapanış farkları elle hesaplanıyor, ertesi günün devreden stokları elle taşınıyordu.
+Satış adetleri ERP raporundan ürün ürün bakılarak elle yazılıyor, kapanış farkları ve çözündürme adetleri manuel hesaplanıyor, ertesi günün devir stokları elle taşınıyordu (~60 dk/gün → ~1 dk/gün).
 
 ## Dosyalar
 
 | Dosya | İçerik |
 |---|---|
-| `markout-formu.xlsx` | Çalışma kitabı (makrosuz). Formüller ve örnek veri içinde |
-| `markout.bas` | VBA modülü. Excel'e içe aktarılır |
-| `ornek-satis-raporu.xlsx` | Makroyu denemek için sahte günlük satış raporu |
+| `markout-formu.xlsx` | Ana çalışma kitabı (formüller, analiz sayfaları ve sentetik örnek veri hazır) |
+| `markout.bas` | Satış çekme, PDF alma ve gün kapatma/devir işlemlerini yürüten VBA modülü |
+| `ornek-satis-raporu.xlsx` | Makroyu denemek için sentetik günlük ERP satış raporu ve dönem özeti |
 
-`markout.bas` içinde Türkçe karakter kullanılmamıştır. VBA düzenleyicisi `.bas` dosyalarını sistemin ANSI kodlamasıyla okuduğu için, bu sayede dosya hem GitHub'da hem de içe aktarıldıktan sonra VBA'da doğru görünür.
+`markout.bas` içinde bilerek ASCII karakterler kullanılmıştır; VBA düzenleyicisi `.bas` dosyalarını sistemin ANSI kodlamasıyla okuduğu için kod hem GitHub'da hem de Excel'e aktarıldığında bozulmadan çalışır. Formül ve analiz sayfaları makro eklenmeden de doğrudan incelenebilir.
 
 ## Sayfalar
 
 | Sayfa | Ne yapar |
 |---|---|
-| `Nasil_Kullanilir` | Günlük akış ve hesapların açıklaması |
-| `Markout` | Ana form: donuk ve günlük bölüm, beklenen kapanış ve fark |
-| `SKT` | Bugün çözündürmeye alınan ve dünden devreden ürünlerin çözündürme saatleri ve son kullanma tarihleri |
-| `Bos_Form` | Kapanış sayımında elle doldurmak için yazdırılabilir boş form |
-| `Satis_Ortalama` | Haftalık ve aylık satıştan ortalama günlük satış |
-| `Ayarlar` | Mağaza adı, ortalama dayanağı, çözündürme saatleri, satış raporunun biçimi |
-| `Arsiv` | Kapatılan her günün satırları |
+| `Nasil_Kullanilir` | Günlük operasyon akışı, hesap mantığı ve renk kodu |
+| `Markout` | Ana form: donuk ve günlük stok hareketleri, beklenen kapanış ve sayım farkı |
+| `SKT` | Bugün çözündürmeye alınan ve dünden devreden ürünlerin saat ve SKT tablosu |
+| `Cozundurme_Plani` | Yarınki tahmini adisyon (ADT) ve UPH hızına göre ürün bazlı çözündürme önerisi ve donuk stok kontrolü |
+| `Ayarlar` | Mağaza adı, ortalama baz seçimi, çözündürme/mark-out saatleri, hedef fire oranı ve ERP rapor sütun ayarları |
+| `Satis_Ortalama` | Son 7 ve 30 günlük satıştan ortalama günlük satış hesabı |
+| `Fire_Analizi` | 30 günlük satış ve atık verisinden fire maliyeti ile Yıldız / Dengeli / Sorunlu ürün sınıflandırması |
+| `Bos_Form` | Sahada kapanış sayımı için yazdırılabilir boş sayım formu |
+| `Arsiv` | Kapatılan her günün tarihsel satır arşivi |
 
 ## Hesaplar
 
 - **Donuk beklenen kapanış** = devreden donuk + gelen − çözündürülen
 - **Günlük beklenen kapanış** = devreden yiyecek + dondan çözülen − satış − tadım − atık
 - **Fark** = sayılan kapanış − beklenen kapanış (eksi değer kayıptır)
-- **Dondan çözülen**: bir önceki gün çözündürmeye alınan miktar. Çözündürme 16:00'da başlar, ertesi sabah 08:00'de biter.
-- **SKT** = çözündürme bitiş tarihi + raf ömrü − 1. Ürün o gün mark-out saatinde (22:00) satıştan kaldırılır.
-- **Ortalama günlük satış** = son 7 gün ÷ 7 veya son 30 gün ÷ 30. Bayram gibi kısa dönemlerde haftalık, genel planlamada aylık kullanılır. Çözündürme miktarı yöneticinin kararıdır; bu sütun karar için yardımcıdır.
+- **UPH (100 adisyon başına satış)** = ortalama günlük satış ÷ referans günlük adisyon × 100
+- **Önerilen çözündürme** = `MAX(0; YUKARIYUVARLA(tahmini talep − eldeki günlük beklenen; 0))`
+- **SKT** = çözündürme bitiş tarihi + raf ömrü − 1 (mark-out saatinde satıştan kaldırılır)
+- **Fire oranı %** = 30 günlük atık ÷ (30 günlük satış + 30 günlük atık)
 
 ## Makrolar
 
 | Kısayol | Makro | Ne yapar |
 |---|---|---|
-| Ctrl+Shift+S | `SatislariAl` | Satış raporu dosyasını seçtirir. SKU ve adet sütunlarını okur, aynı SKU'nun satırlarını toplar, forma yazar. Raporda olup formda olmayan SKU'ları listeler. |
-| Ctrl+Shift+P | `GunSonuPDF` | Formu `Markout_<mağaza>_<tarih>.pdf` olarak çalışma kitabının klasörüne kaydeder. |
-| Ctrl+Shift+K | `GunuKapat` | Boş sayım varsa uyarır. Satırları arşive yazar. Sayılan kapanışları yarının devreden stoğuna, çözündürülenleri yarının "dondan çözülen" sütununa taşır. Günlük girişleri temizler, tarihi bir gün ilerletir. |
+| `Ctrl+Shift+S` | `SatislariAl` | ERP satış raporu dosyasını seçtirir, SKU ve adet sütunlarını toplar, `Markout` sayfasına yazar; formda tanımlı olmayan yeni SKU varsa uyarır. |
+| `Ctrl+Shift+P` | `GunSonuPDF` | Formu `Markout_<mağaza>_<tarih>.pdf` adıyla çalışma kitabının klasörüne kaydeder. |
+| `Ctrl+Shift+K` | `GunuKapat` | Eksik sayım varsa uyarır, günü `Arsiv` sayfasına kaydeder, kapanışları yarının açılış stoğuna ve çözündürülenleri yarının "dondan çözülen" sütununa devredip tarihi ilerletir. |
 
-Formül sütunlarına makro dokunmaz; hesaplar her zaman sayfada görünür kalır.
+## Makroları Etkinleştirme ve Deneme
 
-## Kurulum
-
-1. `markout-formu.xlsx` ve `markout.bas` dosyalarını indirin.
-2. Çalışma kitabını açın, **Alt+F11** ile VBA düzenleyicisini açın.
-3. **File > Import File…** ile `markout.bas` dosyasını seçin.
-4. Düzenleyiciyi kapatın. Dosyayı **Farklı Kaydet > Excel Makro İçerebilen Çalışma Kitabı (\*.xlsm)** olarak kaydedin.
-5. Kısayolların dosya her açıldığında hazır olması için: VBA düzenleyicisinde sol paneldeki **ThisWorkbook**'a çift tıklayın ve şu üç satırı yapıştırın:
-
-   ```vb
-   Private Sub Workbook_Open()
-       KisayollariSessizAta
-   End Sub
-   ```
-
-   Dosyayı kaydedip kapatın ve yeniden açın. (Bu adım atlanırsa kısayollar için her açılışta **Alt+F8** > `KisayollariAta` çalıştırılır; makrolar Alt+F8 listesinden doğrudan da seçilebilir.)
-
-## Deneme
-
-1. `Markout` sayfasında **Ctrl+Shift+S**'ye basıp `ornek-satis-raporu.xlsx` dosyasını seçin. Satış sütunu dolar; rapordaki `109999` kodlu ürünün formda olmadığı uyarısı çıkar.
-2. Birkaç satıra donuk ve günlük "Sayılan Kapanış" girin; fark sütunları hesaplanır.
-3. **Ctrl+Shift+K** ile günü kapatın. `Arsiv` sayfasına satırlar eklenir, tarih bir gün ilerler, sayılan kapanışlar devreden sütunlarına geçer.
-
-## Kendi verinize uyarlama
-
-| Nerede | Ne değiştirilir |
-|---|---|
-| `Markout` | Ürün satırları: kategori başlığı (SKU boş), SKU, ürün adı, raf ömrü (gün) |
-| `Satis_Ortalama` | Aynı SKU'larla haftalık ve aylık satış |
-| `Ayarlar` B8–B10 | Satış raporunda SKU'nun ve adedin kaçıncı sütunda olduğu, verinin kaçıncı satırda başladığı |
-| `Ayarlar` B5–B7 | Çözündürme ve mark-out saatleri |
-| `markout.bas` yapılandırma bloğu | Sayfa veya sütun yerleri değişirse sütun numaraları |
-
-Yeni ürün satırı eklendiğinde `SKT` ve `Bos_Form` sayfalarına da aynı satır için formül eklenmelidir.
-
-## Sınırlar
-
-- Satış raporu ERP'den elle indirilir; makro indirmeyi yapmaz, indirilen dosyayı okur.
-- `GunuKapat` geri alınamaz. Kapatmadan önce PDF almak önerilir.
-- Makrolar Windows'ta Excel 2010 ve sonrasıyla yazılmıştır. Mac ve LibreOffice'te denenmemiştir.
+1. `markout-formu.xlsx`, `markout.bas` ve `ornek-satis-raporu.xlsx` dosyalarını aynı klasöre indirin.
+2. Formülleri, `SKT`, `Cozundurme_Plani` ve `Fire_Analizi` sayfalarını doğrudan `.xlsx` dosyasında inceleyebilirsiniz.
+3. Makroları çalıştırmak için Excel'de **Alt+F11** > **File > Import File…** adımından `markout.bas` dosyasını seçip kitabı `.xlsm` olarak kaydedin (`Alt+F8` > `KisayollariAta` ile kısayolları tanımlayın).
+4. `Markout` sayfasında **Ctrl+Shift+S** ile `ornek-satis-raporu.xlsx` dosyasını seçtiğinizde satış sütunu dolar ve örnek rapordaki tanımsız `109999` SKU kodu için kontrol uyarısı üretilir.
 
 ## Lisans
 

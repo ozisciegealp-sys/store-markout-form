@@ -1,108 +1,78 @@
-# Store End-of-Day (Mark-Out) and Thaw Tracking Form
+# Store End-of-Day (Mark-Out), Thaw Planning and Waste Analysis System
 
 [Türkçe](README.md) | **English**
 
-An Excel + VBA workbook that manages end-of-day frozen and daily food stock counts, sales reconciliation, thaw scheduling, and next-day carryover in a coffee store.
+An Excel + VBA workbook for multi-store retail and F&B operations that automates end-of-day frozen/daily stock counts, ERP (Oracle) SKU sales reconciliation, transaction-based (ADT/UPH) thaw planning, shelf-life/expiry (`SKT`) tracking, and monthly waste classification.
 
-> **Note:** This repository is a **working version rebuilt with synthetic data** of the end-of-day form I developed from the standard store sheet and shared across 16 stores in the area at a coffee chain. Each store adapted the form to its own product range. The structure of the original file (columns, calculations, shelf-life/expiry sheet, printable blank form) is preserved. Products, SKUs, and sales figures are synthetic.
+> **Confidentiality & Synthetic Data Note:** This repository presents a **working version rebuilt entirely with synthetic data** of the store-level reporting and inventory control workbook deployed across a 16-store area. All brand names, store identifiers, and company data have been removed; product names, SKUs, unit costs, and sales figures are synthetic.
 >
-> In the original system, the daily sales report was exported from the company's ERP system (Oracle) and imported into this form. In this version, `ornek-satis-raporu.xlsx` stands in for the exported report; the macro selects and reads the file in the exact same way.
+> In live operations, the daily sales report was exported from the ERP system (Oracle) and read into this workbook with a single shortcut. Here, `ornek-satis-raporu.xlsx` represents that exported ERP report.
 
 ## What problem it solves
 
-At closing time each evening, every item requires answers to four questions: How much is left in frozen storage? How much was sold or wasted during the day? Does the physical count match the expected closing stock? Which items go on the shelf tomorrow and with what expiry date?
+At closing time each evening—and when planning the next day's pull—a store team needs fast, error-free answers: How much stock remains in the freezer and display case? How much was sold vs. wasted? Does the physical count match expected closing stock? Based on tomorrow's forecast customer transactions, how many units should be pulled to thaw and with what expiry date?
 
-In this form:
+In this workbook:
 
-- Sales quantities are pulled from the report by SKU with a single shortcut.
-- Expected closing stock and variance (shrinkage/loss) are calculated automatically.
-- Closing the day rolls today's closing count into tomorrow's opening stock, resets daily entries, and archives the day's record.
-- Expiry dates (SKT) for items pulled to thaw are calculated on a dedicated sheet.
+- Sales quantities are pulled by SKU from the exported ERP report with a single shortcut (`Ctrl+Shift+S`).
+- Expected frozen/daily closing stocks and count variances (shrinkage) calculate automatically.
+- Tomorrow's forecast transactions (`ADT`) and per-SKU units per hundred transactions (`UPH`) drive suggested pull-to-thaw quantities and freezer stock alerts.
+- Expiry dates (`SKT`) for newly pulled and carried-over items compute automatically.
+- 30-day sales and waste figures classify items into **Star Items** (high sales, low waste), **Balanced**, and **Problem Items** (above target waste — reduce pull).
+- Closing the day (`Ctrl+Shift+K`) archives the day's rows and rolls closing counts into tomorrow's opening stock.
 
 ## Before
 
-Sales quantities were looked up item by item from the report and entered by hand, closing variances were calculated manually, and next-day opening stocks were carried over manually.
+Sales quantities were looked up item by item from ERP exports and typed by hand, variances and thaw pulls were calculated manually, and next-day opening balances were copied over manually (~60 min/day → ~1 min/day per store).
 
 ## Files
 
 | File | Contents |
 |---|---|
-| `markout-formu.xlsx` | Workbook (macro-free) containing formulas and sample data |
-| `markout.bas` | VBA module to be imported into Excel |
-| `ornek-satis-raporu.xlsx` | Synthetic daily sales report for testing the macro |
+| `markout-formu.xlsx` | Main workbook with all formulas, planning/analysis tabs, and synthetic sample data |
+| `markout.bas` | VBA module handling ERP sales import, PDF export, and day-close rollover |
+| `ornek-satis-raporu.xlsx` | Synthetic daily ERP SKU sales export + period KPI summary for testing |
 
-`markout.bas` avoids non-ASCII Turkish characters so that the file renders properly both on GitHub and after importing into the Windows ANSI-based VBA editor.
+`markout.bas` intentionally uses ASCII-only identifiers so that the module renders cleanly both on GitHub and inside the Windows ANSI-based VBA editor. All formula and analysis sheets work out-of-the-box without importing macros.
 
 ## Sheets
 
 | Sheet | Purpose |
 |---|---|
-| `Nasil_Kullanilir` | Daily workflow and calculation notes |
-| `Markout` | Main form: frozen and daily sections, expected closing stock, and variance |
-| `SKT` | Thaw times and expiry dates for items pulled today and carried over from yesterday |
-| `Bos_Form` | Printable blank count sheet for manual closing count |
-| `Satis_Ortalama` | Average daily sales from weekly and monthly sales |
-| `Ayarlar` | Store name, averaging basis, thaw hours, and sales report layout |
-| `Arsiv` | Archived rows for every closed day |
+| `Nasil_Kullanilir` | Daily workflow, formula rules, and colour coding |
+| `Markout` | Main sheet: frozen and daily stock flows, expected closing stock, and variance |
+| `SKT` | Thaw timestamps and expiry dates (`SKT`) for items pulled today and carried over |
+| `Cozundurme_Plani` | Transaction (`ADT`) and `UPH`-driven daily pull-to-thaw recommendations and freezer stock alerts |
+| `Ayarlar` | Store name, averaging basis, thaw/mark-out hours, waste threshold, and ERP column mapping |
+| `Satis_Ortalama` | Average daily sales derived from 7-day and 30-day SKU sales |
+| `Fire_Analizi` | 30-day waste rate, waste cost, and Star / Balanced / Problem item classification |
+| `Bos_Form` | Printable blank sheet for floor closing counts |
+| `Arsiv` | Historical log of closed days |
 
-## Calculations
+## Core Calculations
 
 - **Expected frozen closing** = opening frozen + received − pulled to thaw
-- **Expected daily closing** = opening daily + thawed from previous day − sales − sampling − waste
-- **Variance** = counted closing − expected closing (negative value indicates loss)
-- **Thawed from previous day**: quantity pulled to thaw the prior day (thaw starts at 16:00, finishes at 08:00 the next morning)
-- **Expiry date (SKT)** = thaw completion date + shelf life − 1 (removed from sale at mark-out time, 22:00)
-- **Average daily sales** = last 7 days ÷ 7 or last 30 days ÷ 30 (weekly for short peaks such as holidays, monthly for regular planning; thaw quantity remains a manager decision assisted by this column)
+- **Expected daily closing** = opening daily + thawed from prior day − sales − sampling − waste
+- **Variance** = counted closing − expected closing (negative = loss)
+- **UPH (Units per 100 transactions)** = average daily sales ÷ reference daily transactions × 100
+- **Suggested thaw quantity** = `MAX(0, ROUNDUP(forecast demand − expected daily closing, 0))`
+- **Expiry date (SKT)** = thaw completion date + shelf life − 1 (removed at mark-out hour)
+- **Waste rate %** = 30-day waste ÷ (30-day sales + 30-day waste)
 
 ## Macros
 
 | Shortcut | Macro | Action |
 |---|---|---|
-| Ctrl+Shift+S | `SatislariAl` | Prompts to select the sales report file, reads SKU and quantity columns, sums duplicate SKUs, writes them to the form, and lists any SKUs present in the report but missing from the form. |
-| Ctrl+Shift+P | `GunSonuPDF` | Saves the form as `Markout_<store>_<date>.pdf` in the workbook's folder. |
-| Ctrl+Shift+K | `GunuKapat` | Warns if any counts are blank, archives the day's rows, rolls counted closing stocks into tomorrow's opening stock and thawed items into tomorrow's thawed column, clears daily inputs, and advances the date by one day. |
+| `Ctrl+Shift+S` | `SatislariAl` | Prompts for the ERP sales export, aggregates quantities by SKU, populates `Markout`, and flags any unmatched SKUs in the report. |
+| `Ctrl+Shift+P` | `GunSonuPDF` | Exports the form as `Markout_<store>_<date>.pdf` in the workbook folder. |
+| `Ctrl+Shift+K` | `GunuKapat` | Warns on blank counts, appends rows to `Arsiv`, rolls closing counts into tomorrow's opening columns, clears daily inputs, and advances the date. |
 
-Macros never overwrite formula columns; all calculations remain transparent on the sheet.
+## Enabling Macros & Quick Test
 
-## Setup
-
-1. Download `markout-formu.xlsx` and `markout.bas`.
-2. Open the workbook and press **Alt+F11** to open the VBA editor.
-3. Choose **File > Import File…** and select `markout.bas`.
-4. Close the editor and save the file as **Excel Macro-Enabled Workbook (\*.xlsm)**.
-5. To activate shortcuts automatically on open, double-click **ThisWorkbook** in the VBA Project Explorer and paste:
-
-   ```vb
-   Private Sub Workbook_Open()
-       KisayollariSessizAta
-   End Sub
-   ```
-
-   Save, close, and reopen the workbook. (If skipped, run **Alt+F8** > `KisayollariAta` on open, or run macros directly via Alt+F8.)
-
-## Quick Test
-
-1. On the `Markout` sheet, press **Ctrl+Shift+S** and select `ornek-satis-raporu.xlsx`. The sales column populates and alerts that SKU `109999` is not in the form.
-2. Enter a few frozen and daily "Sayılan Kapanış" (Counted Closing) values; variance columns update automatically.
-3. Press **Ctrl+Shift+K** to close the day. Rows append to `Arsiv`, the date advances by one day, and counted closing values carry over as opening stock.
-
-## Adapting to Your Data
-
-| Location | What to adjust |
-|---|---|
-| `Markout` | Product rows: category header (blank SKU), SKU, product name, shelf life (days) |
-| `Satis_Ortalama` | Weekly and monthly sales for the same SKUs |
-| `Ayarlar` B8–B10 | SKU column, quantity column, and starting data row in the sales report |
-| `Ayarlar` B5–B7 | Thaw and mark-out hours |
-| `markout.bas` config block | Column numbers if sheet layout changes |
-
-When adding a new product row, copy the corresponding formulas to the `SKT` and `Bos_Form` sheets as well.
-
-## Limitations
-
-- The sales report is exported manually from the ERP; the macro reads the exported file rather than downloading it.
-- `GunuKapat` (Close Day) cannot be undone; exporting a PDF beforehand is recommended.
-- Written for Excel 2010+ on Windows; not tested on macOS or LibreOffice.
+1. Download `markout-formu.xlsx`, `markout.bas`, and `ornek-satis-raporu.xlsx` into the same folder.
+2. All formula sheets (`Markout`, `SKT`, `Cozundurme_Plani`, `Fire_Analizi`) can be explored immediately in `.xlsx`.
+3. To test the VBA automation in Windows Excel, press **Alt+F11** > **File > Import File…**, select `markout.bas`, save as `.xlsm`, and run `KisayollariAta` once via **Alt+F8**.
+4. Press **Ctrl+Shift+S** on `Markout` and select `ornek-satis-raporu.xlsx` — sales populate automatically and SKU `109999` triggers the unmatched-SKU alert.
 
 ## License
 
